@@ -45,3 +45,9 @@ exports.getProfile = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
+// Logout
+exports.logout = (req, res) => {
+    res.status(200).json({ message: "User logged out successfully" });
+};
+
