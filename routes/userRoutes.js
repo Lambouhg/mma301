@@ -14,4 +14,7 @@ router.get('/profile', userController.getProfile);
 // Logout Route
 router.post('/logout', userController.logout);
 
+// Edit User Profile Route
+router.put('/profile', userController.editProfile);
+
 module.exports = router;

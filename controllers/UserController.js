@@ -132,3 +132,36 @@ exports.logout = (req, res) => {
     res.status(200).json({ message: "User logged out successfully" });
 };
 
+// Edit User Profile
+exports.editProfile = async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+      return res.status(401).json({ message: "Authorization token is missing" });
+  }
+
+  const token = authHeader.split(" ")[1];
+  try {
+      const decoded = jwt.verify(token, "your_jwt_secret");
+      const userId = decoded.userId;
+      const { username } = req.body;
+
+      if (!username || typeof username !== "string" || username.trim().length === 0) {
+          return res.status(400).json({ message: "Username is required" });
+      }
+
+      const updatedUser = await User.findByIdAndUpdate(
+          userId,
+          { username },
+          { new: true }
+      );
+
+      if (!updatedUser) {
+          return res.status(404).json({ message: "User not found" });
+      }
+
+      res.status(200).json(updatedUser);
+  } catch (err) {
+      res.status(500).json({ error: err.message });
+  }
+};
+
