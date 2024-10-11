@@ -14,7 +14,7 @@ const isValidEmailName = (email) => {
 };
 
 const isValidPassword = (password) => {
-  const passwordRegex = /^(?=.*[a-zA-Z])(?=.*[0-9])[a-zA-Z0-9]{6,}$/;
+  const passwordRegex = /^[a-zA-Z0-9]{6,}$/;
   return passwordRegex.test(password);
 };
 
@@ -53,7 +53,7 @@ exports.signup = async (req, res) => {
   if (!password || typeof password !== "string" || !isValidPassword(password)) {
     return res.status(400).json({
       message:
-        "Password must be at least 6 characters long, contain letters and numbers, and no special characters",
+        "Password must be at least 6 characters long and cannot contain special characters",
     });
   }
 
