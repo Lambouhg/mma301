@@ -79,44 +79,33 @@ exports.signup = async (req, res) => {
 };
 
 // User Login
-// User Login
 exports.login = async (req, res) => {
-  const { email, password, rememberMe } = req.body;
-
-  if (!email || typeof email !== "string") {
-    return res.status(400).json({ message: "Email is required" });
-  }
-
-  if (!password || typeof password !== "string") {
-    return res.status(400).json({ message: "Password is required" });
-  }
-
-  const normalizedEmail = email.toLowerCase().trim();
-
-  try {
-    const user = await User.findOne({ email: normalizedEmail });
-    if (!user) return res.status(400).json({ message: "User not found" });
-
-    const isMatch = await user.isValidPassword(password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
-
-    const token = jwt.sign({ userId: user._id }, "your_jwt_secret");
-
-    // Set cookie
-    if (rememberMe) {
-      res.cookie('rememberMe', token, {
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-        httpOnly: true,
-        secure: false
-      });
+    const { email, password } = req.body;
+  
+    if (!email || typeof email !== "string") {
+      return res.status(400).json({ message: "Email is required" });
     }
-
-    req.session.userId = user._id;
-    res.status(200).json({ token, userId: user._id });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
+  
+    if (!password || typeof password !== "string") {
+      return res.status(400).json({ message: "Password is required" });
+    }
+  
+    const normalizedEmail = email.toLowerCase().trim();
+  
+    try {
+      const user = await User.findOne({ email: normalizedEmail });
+      if (!user) return res.status(400).json({ message: "User not found" });
+  
+      const isMatch = await user.isValidPassword(password);
+      if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+  
+      const token = jwt.sign({ userId: user._id }, "your_jwt_secret");
+      res.status(200).json({ token, userId: user._id });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  };
+  
 
 // Get User Profile
 exports.getProfile = async (req, res) => {
@@ -140,11 +129,8 @@ exports.getProfile = async (req, res) => {
 
 // Logout
 exports.logout = (req, res) => {
-  req.session.destroy();
-  res.clearCookie('rememberMe');
-  res.status(200).json({ message: "User logged out successfully" });
+    res.status(200).json({ message: "User logged out successfully" });
 };
-
 
 // Edit User Profile
 exports.editProfile = async (req, res) => {
