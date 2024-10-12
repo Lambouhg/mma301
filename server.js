@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const http = require("http");
 const socketIo = require("socket.io");
+const session = require("express-session");
+const cookieParser = require("cookie-parser");
 
 const app = express();
 const server = http.createServer(app);
@@ -10,6 +12,14 @@ const io = socketIo(server);
 
 app.use(cors());
 app.use(express.json());
+
+app.use(cookieParser());
+app.use(session({
+  secret: 'your_session_secret', // Change this to a secure random string
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false } // Set secure: true in production with HTTPS
+}));
 
 // MongoDB connection
 mongoose
@@ -29,7 +39,7 @@ app.get("/", (req, res) => res.send("Backend is running"));
 // Import routes
 const userRoutes = require("./routes/userRoutes");
 const productRoutes = require("./routes/productRoutes");
-const cartRoutes = require("./routes/cartRoutes"); // Removed the stray 'n'
+const cartRoutes = require("./routes/cartRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 
@@ -50,6 +60,20 @@ io.on("connection", (socket) => {
     console.log("User disconnected");
   });
 });
+
+const checkRememberMe = (req, res, next) => {
+  if (req.cookies.rememberMe) {
+    try {
+      const decoded = jwt.verify(req.cookies.rememberMe, "your_jwt_secret");
+      req.session.userId = decoded.userId;
+    } catch (err) {
+      console.log("Invalid cookie:", err.message);
+    }
+  }
+  next();
+};
+
+app.use(checkRememberMe);
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
