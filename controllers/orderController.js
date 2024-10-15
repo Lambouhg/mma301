@@ -21,3 +21,14 @@ exports.getOrderById = async (req, res) => {
         res.status(500).json({ error: 'Error fetching order' });
     }
 };
+
+// Get orders by user ID
+exports.getOrdersByUserId = async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const orders = await Order.find({ userId });
+        res.status(200).json(orders);
+    } catch (err) {
+        res.status(500).json({ error: 'Error fetching orders' });
+    }
+};
