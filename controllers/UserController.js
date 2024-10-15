@@ -156,16 +156,23 @@ exports.editProfile = async (req, res) => {
   try {
       const decoded = jwt.verify(token, "your_jwt_secret");
       const userId = decoded.userId;
-      const { username } = req.body;
+      const { username, phoneNumber, address } = req.body;
 
+      // Validate the inputs
       if (!username || typeof username !== "string" || username.trim().length === 0) {
           return res.status(400).json({ message: "Username is required" });
       }
 
+      if (phoneNumber && !isValidPhoneNumber(phoneNumber)) {
+          return res.status(400).json({
+              message: "Phone number must be a valid Vietnamese phone number",
+          });
+      }
+
       const updatedUser = await User.findByIdAndUpdate(
           userId,
-          { username },
-          { new: true }
+          { username, phoneNumber, address },
+          { new: true, runValidators: true }
       );
 
       if (!updatedUser) {
@@ -177,4 +184,3 @@ exports.editProfile = async (req, res) => {
       res.status(500).json({ error: err.message });
   }
 };
-
