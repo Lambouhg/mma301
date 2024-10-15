@@ -1,5 +1,5 @@
 const Chat = require('../models/Chat');
-
+const User = require('../models/User');
 // Get chat history by User ID
 exports.getChatHistory = async (req, res) => {
     try {
@@ -17,7 +17,7 @@ exports.getChatHistory = async (req, res) => {
 // Send a new message
 // Send a new message
 exports.sendMessage = async (req, res) => {
-    const { message } = req.body; // Removed sender from body as it will be set from user context
+    const { message } = req.body; // Get the message from request body
 
     // Validate message
     if (!message) {
@@ -25,8 +25,8 @@ exports.sendMessage = async (req, res) => {
     }
 
     try {
-        const userId = req.params.userId; // Get the userId from request parameters
-        const user = await User.findById(userId); // Find user by userId
+        const userId = req.params.userId; // Get userId from request parameters
+        const user = await User.findById(userId); // Find the user by userId
 
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
@@ -34,19 +34,23 @@ exports.sendMessage = async (req, res) => {
 
         const sender = user.username; // Get the username from the user document
 
-        let chat = await Chat.findOne({ userId: userId });
+        // Find or create a new chat document for the user
+        let chat = await Chat.findOne({ userId });
         if (!chat) {
-            chat = new Chat({ userId: userId, messages: [] });
+            chat = new Chat({ userId, messages: [] }); // Initialize chat with empty messages
         }
 
-        // Push new message to chat
+        // Push the new message to the chat
         chat.messages.push({ sender, message });
-        await chat.save();
+        await chat.save(); // Save the updated chat document
 
         // Return the updated chat object
         res.status(200).json(chat);
     } catch (err) {
         console.error("Error sending message:", err);
+        res.status(500).json({ error: 'Error sending message' });
+    }
+};
         res.status(500).json({ error: 'Error sending message' });
     }
 };
