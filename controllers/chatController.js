@@ -1,5 +1,6 @@
 const Chat = require('../models/Chat');
 const User = require('../models/User');
+
 // Get chat history by User ID
 exports.getChatHistory = async (req, res) => {
     try {
@@ -14,7 +15,6 @@ exports.getChatHistory = async (req, res) => {
     }
 };
 
-// Send a new message
 // Send a new message
 exports.sendMessage = async (req, res) => {
     const { message } = req.body; // Get the message from request body
@@ -41,16 +41,13 @@ exports.sendMessage = async (req, res) => {
         }
 
         // Push the new message to the chat
-        chat.messages.push({ sender, message });
+        chat.messages.push({ username: sender, message }); // Ensure the structure is correct
         await chat.save(); // Save the updated chat document
 
-        // Return the updated chat object
-        res.status(200).json(chat);
+        // Return the updated chat object with status 201 (Created)
+        res.status(201).json(chat);
     } catch (err) {
         console.error("Error sending message:", err);
-        res.status(500).json({ error: 'Error sending message' });
-    }
-};
         res.status(500).json({ error: 'Error sending message' });
     }
 };
