@@ -18,9 +18,14 @@ const isValidPassword = (password) => {
   return passwordRegex.test(password);
 };
 
+const isValidPhoneNumber = (phoneNumber) => {
+  const phoneRegex = /^(03|05|07|08|09)[0-9]{8}$/;
+  return phoneRegex.test(phoneNumber);
+};
+
 // User Signup
 exports.signup = async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, phoneNumber, address } = req.body;
 
   const normalizedEmail = email.toLowerCase();
 
@@ -57,6 +62,12 @@ exports.signup = async (req, res) => {
     });
   }
 
+  if (phoneNumber && !isValidPhoneNumber(phoneNumber)) {
+    return res.status(400).json({
+      message: "Phone number must be a valid Vietnamese phone number",
+    });
+  }
+
   try {
     const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
@@ -69,6 +80,8 @@ exports.signup = async (req, res) => {
       username,
       email: normalizedEmail,
       passwordHash,
+      phoneNumber,
+      address
     });
 
     await newUser.save();
