@@ -113,11 +113,10 @@ exports.editPassword = async (req, res) => {
 
   try {
     // Giải mã token để lấy userId từ JWT
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
+    const decoded = jwt.verify(token, "your_jwt_secret");
 
     // Tìm người dùng trong cơ sở dữ liệu
-    const user = await User.findById(userId);
+    const user = await User.findById(decoded.userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
