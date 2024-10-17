@@ -54,3 +54,26 @@ exports.removeFromCart = async (req, res) => {
         res.status(500).json({ message: 'Server error', error: err });
     }
 };
+
+
+exports.updateQuantity = async (req, res) => {
+    const { userId, productId } = req.params;
+    const { quantity } = req.body;
+
+    try {
+        const cart = await Cart.findOne({ userId });
+        if (!cart) return res.status(404).json({ message: 'Cart not found' });
+
+        const productIndex = cart.products.findIndex(item => item.productId.toString() === productId);
+        if (productIndex > -1) {
+            // Cập nhật số lượng sản phẩm
+            cart.products[productIndex].quantity = quantity;
+            await cart.save();
+            res.status(200).json(cart);
+        } else {
+            return res.status(404).json({ message: 'Product not found in cart' });
+        }
+    } catch (err) {
+        res.status(500).json({ message: 'Server error', error: err });
+    }
+};
