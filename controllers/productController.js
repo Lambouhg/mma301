@@ -20,11 +20,24 @@ exports.getProductById = async (req, res) => {
     }
 };
 
+
 // Add a new product (Admin only)
 exports.addProduct = async (req, res) => {
-    const { name, description, price, stock, imageUrl, category } = req.body;
+    const { name, description, price, stock, imageUrl, category, brand, sizes, colors, material, gender } = req.body;
     try {
-        const newProduct = new Product({ name, description, price, stock, imageUrl, category });
+        const newProduct = new Product({
+            name,
+            description,
+            price,
+            stock,
+            imageUrl,
+            category,
+            brand,
+            sizes,
+            colors,
+            material,
+            gender
+        });
         await newProduct.save();
         res.status(201).json(newProduct);
     } catch (err) {
