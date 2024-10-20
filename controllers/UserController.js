@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { sendVerificationCode } = require("../services/EmailService");
 
 const isValidEmail = (email) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -23,10 +24,14 @@ const isValidPhoneNumber = (phoneNumber) => {
   return phoneRegex.test(phoneNumber);
 };
 
+// Hàm để tạo mã xác thực 6 chữ số
+const generateVerificationCode = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString(); // Random 6 chữ số
+};
+
 // User Signup
 exports.signup = async (req, res) => {
   const { username, email, password, phoneNumber, address } = req.body;
-
   const normalizedEmail = email.toLowerCase();
 
   if (
@@ -37,31 +42,25 @@ exports.signup = async (req, res) => {
     return res.status(400).json({ message: "Username is required" });
   }
 
+  // Kiểm tra địa chỉ email
   if (
     !normalizedEmail ||
     typeof normalizedEmail !== "string" ||
     !isValidEmail(normalizedEmail) ||
+    !isValidEmailName(normalizedEmail) ||  // Kiểm tra tên người dùng trong email
     !normalizedEmail.endsWith("@gmail.com")
   ) {
-    return res
-      .status(400)
-      .json({ message: "A valid Gmail address is required" });
+    return res.status(400).json({ message: "Email name must be at least 6 characters long and cannot contain special characters" });
   }
 
-  if (!isValidEmailName(normalizedEmail)) {
-    return res.status(400).json({
-      message:
-        "Email name must be at least 6 characters long and cannot contain special characters",
-    });
-  }
-
+  // Kiểm tra mật khẩu
   if (!password || typeof password !== "string" || !isValidPassword(password)) {
     return res.status(400).json({
-      message:
-        "Password must be at least 6 characters long and cannot contain special characters",
+      message: "Password must be at least 6 characters long and cannot contain special characters",
     });
   }
 
+  // Kiểm tra số điện thoại
   if (phoneNumber && !isValidPhoneNumber(phoneNumber)) {
     return res.status(400).json({
       message: "Phone number must be a valid Vietnamese phone number",
@@ -76,20 +75,55 @@ exports.signup = async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
+
+    // Tạo mã xác thực 6 chữ số
+    const verificationCode = generateVerificationCode();
+
+    // Gửi mã xác thực tới email của người dùng
+    await sendVerificationCode(normalizedEmail, verificationCode);
+
+    // Lưu thông tin người dùng với mã xác thực (có thể lưu vào cơ sở dữ liệu tạm thời)
     const newUser = new User({
       username,
       email: normalizedEmail,
       passwordHash,
       phoneNumber,
       address,
+      verificationCode,  // Lưu mã xác thực vào cơ sở dữ liệu
     });
 
     await newUser.save();
-    res.status(201).json({ message: "User created successfully" });
+    res.status(201).json({ message: "User created successfully. Please check your email for the verification code." });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
+// Xác thực mã
+exports.verifyCode = async (req, res) => {
+  const { email, code } = req.body;
+  
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    if (user.verificationCode !== code) {
+      return res.status(400).json({ message: "Invalid verification code" });
+    }
+
+    // Xác thực thành công, có thể cập nhật trạng thái xác thực của người dùng
+    user.isVerified = true;
+    user.verificationCode = null;  // Xóa mã xác thực sau khi xác thực thành công
+    await user.save();
+
+    res.status(200).json({ message: "Email verified successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 //edit pass
 exports.editPassword = async (req, res) => {
   const { password, newPassword } = req.body; // Lấy mật khẩu từ request body

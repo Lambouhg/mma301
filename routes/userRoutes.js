@@ -16,5 +16,11 @@ router.post("/logout", userController.logout);
 
 // Edit User Profile Route
 router.put("/profile", userController.editProfile);
+
+//Edit PassWord
 router.put("/editPass", userController.editPassword);
+
+//Verify New Account
+router.post("/verify", userController.verifyCode);
+
 module.exports = router;
