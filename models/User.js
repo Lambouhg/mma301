@@ -16,6 +16,7 @@ const UserSchema = new mongoose.Schema({
         totalPrice: Number,
         products: [{
             productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+            quantity: Number
         }],
         paymentMethod: String,
         date: Date
