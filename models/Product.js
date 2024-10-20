@@ -7,11 +7,11 @@ const ProductSchema = new mongoose.Schema({
     stock: { type: Number, required: true },
     imageUrl: { type: String },
     category: { type: String },
-    brand: { type: String, required: true }, // Thương hiệu của giày
-    sizes: [{ type: Number, required: true }], // Danh sách các kích cỡ giày
-    colors: [{ type: String, required: true }], // Danh sách các màu sắc
-    material: { type: String, required: true }, // Chất liệu của giày
-    gender: { type: String, enum: ['male', 'female', 'unisex'], required: true }, // Giới tính
+    brand: { type: String, required: true },
+    sizes: [{ type: Number, required: true }],
+    colors: [{ type: String, required: true }],
+    material: { type: String, required: true },
+    gender: { type: String, enum: ['male', 'female', 'unisex'], required: true },
 });
 
 module.exports = mongoose.model('Product', ProductSchema);
