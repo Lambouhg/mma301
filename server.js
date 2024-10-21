@@ -3,8 +3,6 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const http = require("http");
 const socketIo = require("socket.io");
-const { sendVerificationCode } = require("./services/EmailService");
-const User = require("./models/User");
 
 const app = express();
 const server = http.createServer(app);
@@ -41,33 +39,6 @@ app.use("/products", productRoutes);
 app.use("/cart", cartRoutes);
 app.use("/orders", orderRoutes);
 app.use("/chats", chatRoutes);
-
-// API đăng ký người dùng
-app.post("/signup", async (req, res) => {
-  const { username, email, password, phoneNumber, address } = req.body;
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
-
-  try {
-    const passwordHash = await bcrypt.hash(password, 10);
-    const newUser = new User({
-      username,
-      email,
-      passwordHash,
-      phoneNumber,
-      address,
-      verificationCode: code,
-    });
-
-    // Gửi mã xác thực đến email
-    await sendVerificationCode(email, code);
-    await newUser.save();
-
-    res.json({ message: "User registered successfully. Verification code sent to email." });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Error during signup");
-  }
-});
 
 // Socket.io for chat
 io.on("connection", (socket) => {
