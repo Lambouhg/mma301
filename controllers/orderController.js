@@ -1,4 +1,5 @@
 const Order = require('../models/Order');
+const Product = require('../models/Product'); 
 
 // Hàm định dạng ngày
 const formatDate = (dateString) => {
@@ -18,9 +19,26 @@ exports.createOrder = async (req, res) => {
     const { userId, products, totalPrice, paymentMethod } = req.body;
     try {
         const newOrder = new Order({ userId, products, totalPrice, paymentMethod });
+        
+        // Kiểm tra dữ liệu trước khi lưu
+        console.log('Creating order with data:', { userId, products, totalPrice, paymentMethod });
+        
         await newOrder.save();
+
+        // Cập nhật stock sản phẩm sau khi tạo đơn hàng thành công
+        for (const item of products) {
+            const product = await Product.findById(item.productId);
+            if (product) {
+                product.stock -= item.quantity;
+                await product.save();
+            } else {
+                throw new Error(`Product with ID ${item.productId} not found`);
+            }
+        }
+
         res.status(201).json(newOrder);
     } catch (err) {
+        console.error('Error creating order:', err); // Thêm log chi tiết lỗi
         res.status(500).json({ error: 'Error creating order' });
     }
 };
@@ -44,17 +62,30 @@ exports.getOrderById = async (req, res) => {
 exports.deleteOrderById = async (req, res) => {
     try {
         const orderId = req.params.orderId;
-        const deletedOrder = await Order.findByIdAndDelete(orderId);
+        const deletedOrder = await Order.findById(orderId);
 
         if (!deletedOrder) {
             return res.status(404).json({ error: 'Order not found' });
         }
 
+        // Cập nhật lại stock cho từng sản phẩm trong đơn hàng
+        for (const item of deletedOrder.products) {
+            const product = await Product.findById(item.productId);
+            if (product) {
+                product.stock += item.quantity; // Hoàn lại số lượng vào stock
+                await product.save(); // Lưu lại sản phẩm sau khi cập nhật
+            }
+        }
+
+        // Xóa đơn hàng
+        await Order.findByIdAndDelete(orderId);
         res.status(200).json({ message: 'Order deleted successfully' });
     } catch (err) {
+        console.error("Error deleting order:", err);
         res.status(500).json({ error: 'Error deleting order' });
     }
 };
+
 
 
 // Get orders by user ID
