@@ -102,9 +102,10 @@ exports.signup = async (req, res) => {
 // Xác thực mã
 exports.verifyCode = async (req, res) => {
   const { email, code } = req.body;
+  const normalizedEmail = email.toLowerCase();
   
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email:normalizedEmail });
     if (!user) {
       return res.status(400).json({ message: "User not found" });
     }
