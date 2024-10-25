@@ -23,4 +23,10 @@ router.put("/editPass", userController.editPassword);
 //Verify New Account
 router.post("/verify", userController.verifyCode);
 
+//Send verify to reset
+router.post("/forgot-password", userController.sendForgotPasswordCode);
+
+//Reset password
+router.post("/reset-password", userController.resetPassword);
+
 module.exports = router;

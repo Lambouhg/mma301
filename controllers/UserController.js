@@ -205,6 +205,57 @@ exports.login = async (req, res) => {
   }
 };
 
+// Gửi mã xác thực khi quên mật khẩu
+exports.sendForgotPasswordCode = async (req, res) => {
+  const { email } = req.body;
+  const normalizedEmail = email.toLowerCase();
+
+  try {
+    const user = await User.findOne({ email: normalizedEmail });
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    const verificationCode = generateVerificationCode();
+    user.verificationCode = verificationCode;
+    await user.save();
+
+    await sendVerificationCode(normalizedEmail, verificationCode);
+    res.status(200).json({ message: "Verification code sent to your email" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Đặt lại mật khẩu mới sau khi xác thực mã
+exports.resetPassword = async (req, res) => {
+  const { email, newPassword } = req.body;
+  const normalizedEmail = email.toLowerCase();
+
+  // Kiểm tra tính hợp lệ của mật khẩu mới
+  if (!newPassword || typeof newPassword !== "string" || !isValidPassword(newPassword)) {
+    return res.status(400).json({ message: "Invalid new password" });
+  }
+
+  try {
+    const user = await User.findOne({ email: normalizedEmail });
+
+    // Kiểm tra nếu người dùng không tồn tại hoặc mã xác thực chưa bị xóa
+    if (!user || user.verificationCode !== null) {
+      return res.status(400).json({ message: "User not found or verification incomplete" });
+    }
+
+    // Đặt lại mật khẩu
+    const salt = await bcrypt.genSalt(10);
+    user.passwordHash = await bcrypt.hash(newPassword, salt);
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // Get User Profile
 exports.getProfile = async (req, res) => {
   const authHeader = req.headers.authorization;
