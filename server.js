@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const http = require("http");
 const socketIo = require("socket.io");
+const User = require("./models/User");
 
 const app = express();
 const server = http.createServer(app);
@@ -23,13 +24,33 @@ mongoose
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.log("Error connecting to MongoDB", err));
 
+// Hàm xóa tài khoản chưa xác thực
+const deleteUnverifiedAccounts = async () => {
+  const expirationTime = 1 * 60 * 1000; // 1 phút
+  const thresholdDate = new Date(Date.now() - expirationTime);
+  
+  console.log(`Đang xóa tài khoản chưa xác thực trước: ${thresholdDate}`);
+  
+  const result = await User.deleteMany({ 
+    isVerified: false, 
+    createdAt: { $lt: thresholdDate } 
+  });
+  
+  console.log(`Số tài khoản đã xóa: ${result.deletedCount}`);
+};
+
+// Gọi hàm deleteUnverifiedAccounts mỗi phút
+setInterval(() => {
+  deleteUnverifiedAccounts();
+}, 60 * 1000); // Gọi hàm mỗi 60 giây
+
 // Routes
 app.get("/", (req, res) => res.send("Backend is running"));
 
 // Import routes
 const userRoutes = require("./routes/userRoutes");
 const productRoutes = require("./routes/productRoutes");
-const cartRoutes = require("./routes/cartRoutes"); // Removed the stray 'n'
+const cartRoutes = require("./routes/cartRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
@@ -55,9 +76,7 @@ io.on("connection", (socket) => {
   });
 });
 
-//payment
-
-
+// Payment
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

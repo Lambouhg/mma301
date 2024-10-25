@@ -89,7 +89,8 @@ exports.signup = async (req, res) => {
       passwordHash,
       phoneNumber,
       address,
-      verificationCode,  // Lưu mã xác thực vào cơ sở dữ liệu
+      verificationCode,
+      createdAt: Date.now(),
     });
 
     await newUser.save();
@@ -105,7 +106,9 @@ exports.verifyCode = async (req, res) => {
   const normalizedEmail = email.toLowerCase();
   
   try {
-    const user = await User.findOne({ email:normalizedEmail });
+    await deleteUnverifiedAccounts(); // Kiểm tra và xóa tài khoản không xác thực
+
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       return res.status(400).json({ message: "User not found" });
     }
