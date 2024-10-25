@@ -104,10 +104,8 @@ exports.signup = async (req, res) => {
 exports.verifyCode = async (req, res) => {
   const { email, code } = req.body;
   const normalizedEmail = email.toLowerCase();
-  
-  try {
-    await deleteUnverifiedAccounts(); // Kiểm tra và xóa tài khoản không xác thực
 
+  try {
     const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       return res.status(400).json({ message: "User not found" });
@@ -117,12 +115,15 @@ exports.verifyCode = async (req, res) => {
       return res.status(400).json({ message: "Invalid verification code" });
     }
 
-    // Xác thực thành công, có thể cập nhật trạng thái xác thực của người dùng
+    // Xác thực thành công, cập nhật trạng thái xác thực của người dùng
     user.isVerified = true;
     user.verificationCode = null;  // Xóa mã xác thực sau khi xác thực thành công
     await user.save();
 
     res.status(200).json({ message: "Email verified successfully" });
+
+    // Gọi hàm xóa tài khoản chưa xác thực sau khi trả về phản hồi
+    await deleteUnverifiedAccounts();
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
