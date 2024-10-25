@@ -234,7 +234,7 @@ exports.resetPassword = async (req, res) => {
 
   // Kiểm tra tính hợp lệ của mật khẩu mới
   if (!newPassword || typeof newPassword !== "string" || !isValidPassword(newPassword)) {
-    return res.status(400).json({ message: "Invalid new password" });
+    return res.status(400).json({ message: "Password must be at least 6 characters long and cannot contain special characters" });
   }
 
   try {
