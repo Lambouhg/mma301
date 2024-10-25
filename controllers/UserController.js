@@ -194,6 +194,11 @@ exports.login = async (req, res) => {
     const user = await User.findOne({ email: normalizedEmail });
     if (!user) return res.status(400).json({ message: "User not found" });
 
+    // Kiểm tra xem tài khoản đã được xác thực chưa
+    if (user.verificationCode !== null) {
+      return res.status(400).json({ message: "Tài khoản chưa được xác thực" });
+    }
+
     const isMatch = await user.isValidPassword(password);
     if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" });
