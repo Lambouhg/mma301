@@ -217,7 +217,7 @@ exports.login = async (req, res) => {
 // Gửi mã xác thực khi quên mật khẩu
 exports.sendForgotPasswordCode = async (req, res) => {
   const { email } = req.body;
-  const normalizedEmail = email.toLowerCase();
+  const normalizedEmail = email.toLowerCase().trim();
 
   try {
     const user = await User.findOne({ email: normalizedEmail });
