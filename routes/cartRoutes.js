@@ -13,3 +13,4 @@ router.delete('/:userId/:productId', cartController.removeFromCart);
 // Thêm route cho cập nhật số lượng sản phẩm
 router.put('/:userId/:productId/update', cartController.updateQuantity);
 module.exports = router;
+router.delete('/:userId', cartController.deleteCart);

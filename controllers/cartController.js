@@ -56,6 +56,27 @@ exports.removeFromCart = async (req, res) => {
 };
 
 
+// Xóa giỏ hàng
+exports.deleteCart = async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        // Find the cart by userId and delete it
+        const result = await Cart.deleteOne({ userId });
+        
+        // Check if any document was deleted
+        if (result.deletedCount === 0) {
+            return res.status(404).json({ message: 'Cart not found' });
+        }
+
+        res.status(200).json({ message: 'Cart deleted successfully' });
+    } catch (err) {
+        console.error(err); // Log the error for debugging
+        res.status(500).json({ message: 'Server error', error: err.message });
+    }
+};
+
+
 exports.updateQuantity = async (req, res) => {
     const { userId, productId } = req.params;
     const { quantity } = req.body;
