@@ -117,15 +117,24 @@ exports.verifyCode = async (req, res) => {
 
     // Xác thực thành công, cập nhật trạng thái xác thực của người dùng
     user.isVerified = true;
-    user.verificationCode = null;  // Xóa mã xác thực sau khi xác thực thành công
+    user.verificationCode = null; // Xóa mã xác thực sau khi xác thực thành công
     await user.save();
 
+    // Trả phản hồi thành công trước khi gọi hàm xóa tài khoản chưa xác thực
     res.status(200).json({ message: "Email verified successfully" });
 
-    // Gọi hàm xóa tài khoản chưa xác thực sau khi trả về phản hồi
-    await deleteUnverifiedAccounts();
+    // Gọi hàm xóa tài khoản chưa xác thực nhưng không await, đảm bảo lỗi không ảnh hưởng
+    deleteUnverifiedAccounts().catch(error => {
+      console.error("Error deleting unverified accounts:", error);
+    });
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    // Đảm bảo rằng bất kỳ lỗi nào đều sẽ chỉ gửi phản hồi một lần
+    if (!res.headersSent) {
+      res.status(500).json({ message: error.message });
+    } else {
+      console.error("Error after response sent:", error);
+    }
   }
 };
 
@@ -261,7 +270,7 @@ exports.resetPassword = async (req, res) => {
 
     res.status(200).json({ message: "Password reset successfully" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Fail" });
   }
 };
 
